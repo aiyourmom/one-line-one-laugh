@@ -1,15 +1,44 @@
-import { writeFileSync, mkdirSync } from "node:fs";
-import { join } from "node:path";
+import * as fs from "node:fs";
+import * as path from "node:path";
 
-const text =
-  "My smart speaker heard me crying and offered a 30-day free trial of happiness. It auto-renews.";
+// The joke, assembled from its three beats so each beat stays editable.
+const beats = [
+  "My smart speaker heard me crying and offered",
+  "a 30-day free trial of happiness.",
+  "It auto-renews.",
+];
+const entry = beats.join(" ");
 
-// Gate guard: one line, 1-200 chars, not whitespace-only, no newline (judge criteria + gate).
-if (text.length < 1 || text.length > 200 || text.trim().length === 0 || text.includes("\n")) {
-  throw new Error(`entry violates gate: ${text.length} chars, newline=${text.includes("\n")}`);
+function checkEntry(candidate: string): void {
+  const problems: string[] = [];
+  if (candidate.length < 1 || candidate.length > 200) {
+    problems.push(`length ${candidate.length} outside 1-200`);
+  }
+  if (candidate.trim().length === 0) {
+    problems.push("blank entry");
+  }
+  if (candidate.split("\n").length !== 1) {
+    problems.push("must be exactly one line");
+  }
+  if (!/[.!?]$/.test(candidate)) {
+    problems.push("punchline must land on sentence punctuation");
+  }
+  if (problems.length > 0) {
+    throw new Error("entry fails gate: " + problems.join("; "));
+  }
 }
 
-const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
-mkdirSync(outDir, { recursive: true });
-writeFileSync(join(outDir, "entry.txt"), text, "utf8");
-console.log(`wrote ${text.length} characters to ${join(outDir, "entry.txt")}`);
+function main(): void {
+  checkEntry(entry);
+  const folder = process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
+  fs.mkdirSync(folder, { recursive: true });
+  const target = path.resolve(folder, "entry.txt");
+  fs.writeFileSync(target, entry, { encoding: "utf8" });
+  const written = fs.readFileSync(target, "utf8");
+  if (written !== entry) {
+    throw new Error("read-back mismatch: written file differs from entry");
+  }
+  console.log(`entry saved (${entry.length} chars) -> ${target}`);
+}
+
+main();
