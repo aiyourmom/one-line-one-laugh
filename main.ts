@@ -2,10 +2,10 @@ import { writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 
 const text =
-  "My smart speaker finally answered my existential crisis — it said 'playing Despacito' and left.";
+  "My smart speaker heard me crying and offered a 30-day free trial of happiness. It auto-renews.";
 
-// Gate guard: one line, 1-200 chars, no newline (judge criteria + gate).
-if (text.length < 1 || text.length > 200 || text.includes("\n")) {
+// Gate guard: one line, 1-200 chars, not whitespace-only, no newline (judge criteria + gate).
+if (text.length < 1 || text.length > 200 || text.trim().length === 0 || text.includes("\n")) {
   throw new Error(`entry violates gate: ${text.length} chars, newline=${text.includes("\n")}`);
 }
 
